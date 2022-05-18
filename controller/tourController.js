@@ -152,3 +152,55 @@ exports.deleteTour = async (req, res) => {
     });
   }
 };
+
+// stats tour
+exports.getTourStats = async (req, res) => {
+  try {
+    //aggregate: định nghĩa 1 pipeline mà tất cả các document từ 1 collection đều đi qua và đi qua từng stage để biến đổi chúng thành các kết quả được tổng hợp
+    const stats = await Tour.aggregate([
+      // stage 1
+      {
+        $match: {
+          ratingsAverage: {
+            $gte: 4.7,
+          },
+        },
+      },
+      // stage 2
+      {
+        $group: {
+          /**
+           * _id: có thể có các giá trị như $<field name > hoặc giá trị null hoặc 1 giá trị  constant
+           * nếu _id có giá trị null hoặc constant -> $group sẽ tính toán các giá trị của các trường (sum, ratingsQuantity,ratingAverage,minPrice ,maxPrice) cho tất cả các document đầu vào
+           * nếu _id có giá trị $<field name> -> $group sẽ tính toán các giá trị của các trường (sum, ratingsQuantity,ratingAverage,minPrice ,maxPrice) cho các document được nhóm bởi các giá trị của trường <field name> đó
+           */
+          _id: "$difficulty",
+          sum: { $sum: 1 },
+          numRatings: { $sum: "$ratingsQuantity" },
+          avgRating: { $avg: "$ratingsAverage" },
+          minPrice: { $min: "$price" },
+          maxPrice: { $max: "$price" },
+        },
+      },
+      // với cac stage sau stage group thì phải dùng các trường trong stage group vì lúc này trong stage group đang là 1 document mới sẽ được trả về cho client
+      {
+        $sort: { avgRating: -1 }, // giảm dần
+      },
+      {
+        $match: { avgRating: { $gte: 4.8 } },
+      },
+    ]);
+    // await Tour.aggregate trả về document
+    res.status(200).json({
+      status: "success",
+      data: {
+        stats: stats,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "fail",
+      message: err,
+    });
+  }
+};
