@@ -11,7 +11,11 @@ const tourController = require("../controller/tourController");
 router
   .route("/top-5-best-and-cheap")
   .get(tourController.aliasTopTours, tourController.getAllTour);
+
 router.route("/tour-stats").get(tourController.getTourStats);
+
+router.route("/month-plans/:year").get(tourController.getMonthlyPlans);
+
 router
   // do đã gán tourRouter vào trong app.use('/api/v1/tours') nên các route của tourRouter chỉ còn cần "/" là được
   // match với '/api/v1/tours/'

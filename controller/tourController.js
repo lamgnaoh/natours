@@ -204,3 +204,59 @@ exports.getTourStats = async (req, res) => {
     });
   }
 };
+
+// month plans
+exports.getMonthlyPlans = async (req, res) => {
+  try {
+    const year = req.params.year * 1;
+    console.log(year);
+    const plans = await Tour.aggregate([
+      // giải cấu trúc (destrucruting) một trường trong document có giá trị là 1 mảng thành các document có giá trị của trường đó là 1 element trong mảng
+
+      {
+        $unwind: {
+          path: "$startDates",
+        },
+      },
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $month: "$startDates",
+          },
+          numTour: { $sum: 1 },
+          nameTours: { $push: "$name" },
+        },
+      },
+      {
+        $addFields: { month: "$_id" },
+      },
+      {
+        $sort: { month: -1 },
+      },
+      {
+        $project: {
+          _id: 0,
+        },
+      },
+    ]);
+    res.status(200).json({
+      status: "success",
+      data: {
+        plans: plans,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "fail",
+      message: err,
+    });
+  }
+};
