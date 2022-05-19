@@ -62,6 +62,10 @@ const tourSchema = new mongoose.Schema(
       // select: false -> muốn loại bỏ một số trường (fields) của 1 model  khỏi việc query từ database -> thêm option select: false vào trong Schema của Model đó
     },
     startDates: [Date],
+    secretTour: {
+      type: Boolean,
+      default: false,
+    },
   },
   // cần phải có các option này thì mới có thể gửi được các trường virtual đến cho client được
   {
@@ -100,6 +104,21 @@ tourSchema.pre("save", function (next) {
 //   console.log(doc);
 //   next();
 // });
+
+// QUERY MIDDLEWARE
+// query middleware sẽ thực thi 1 callback function trước hoặc sau khi 1 query được thực thi
+tourSchema.pre(/^find/, function (next) {
+  // thực thi callback function trước khi 1 query thực thi
+  // this trong query middleware sẽ trỏ tới query object (Ở đây là Tour.find() , Tour.findOne() , Tour.findOneAndUpdate() , ...)
+  // ở đây trước khi query Tour.find...() được thực thi thì có 1 query Tour.find({ secretTour: { $ne: true } }) được thực thi
+
+  this.find({ secretTour: { $ne: true } });
+  next();
+});
+tourSchema.post(/^find/, function (doc, next) {
+  console.log(doc);
+  next();
+});
 
 // Tao mot model tu schema. model như là một bản thiết kế -> tạo ra document
 const Tour = mongoose.model("Tour", tourSchema);
