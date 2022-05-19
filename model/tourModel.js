@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const slugify = require("slugify");
 // tao 1 schema
 const tourSchema = new mongoose.Schema(
   {
@@ -12,6 +13,9 @@ const tourSchema = new mongoose.Schema(
       type: String,
       required: [true, "A name must be defined"],
       unique: true,
+    },
+    slug: {
+      type: String,
     },
     duration: {
       type: Number,
@@ -59,6 +63,7 @@ const tourSchema = new mongoose.Schema(
     },
     startDates: [Date],
   },
+  // cần phải có các option này thì mới có thể gửi được các trường virtual đến cho client được
   {
     toJSON: {
       virtuals: true,
@@ -68,10 +73,34 @@ const tourSchema = new mongoose.Schema(
     },
   }
 );
-
+// virtual properties là các trường được định nghĩa trong schema nhưng sẽ không được lưu trong DB
 tourSchema.virtual("durationInWeek").get(function () {
   return this.duration / 7;
 });
+
+// DOCUMENT MIDDLEWARE
+
+//  định nghĩa 1 middleware thực hiện trước / sau khi event xảy ra
+
+tourSchema.pre("save", function (next) {
+  // callback function  được thực thi trước khi event save (.save() , .create()) (khi 1 document được lưu vào trong database) xảy ra
+  // this trong document middleware này  sẽ trỏ về phía document hiện tại đang được xử lý
+  this.slug = slugify(this.name);
+  next();
+});
+
+// tourSchema.pre("save", function (next) {
+//   console.log("Will save document ...");
+//   next();
+// });
+
+// tourSchema.post("save", function (doc, next) {
+//   // callback function  được thực thi sau khi event save (.save() , .create()) (khi 1 document được lưu vào trong database) xảy ra
+
+//   console.log(doc);
+//   next();
+// });
+
 // Tao mot model tu schema. model như là một bản thiết kế -> tạo ra document
 const Tour = mongoose.model("Tour", tourSchema);
 module.exports = Tour;
