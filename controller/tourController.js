@@ -186,9 +186,9 @@ exports.getTourStats = async (req, res) => {
       {
         $sort: { avgRating: -1 }, // giảm dần
       },
-      {
-        $match: { avgRating: { $gte: 4.8 } },
-      },
+      // {
+      //   $match: { avgRating: { $gte: 4.8 } },
+      // },
     ]);
     // await Tour.aggregate trả về document
     res.status(200).json({

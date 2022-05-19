@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const slugify = require("slugify");
+const validator = require("validator");
 // tao 1 schema
 const tourSchema = new mongoose.Schema(
   {
@@ -11,22 +12,33 @@ const tourSchema = new mongoose.Schema(
     // advance:
     name: {
       type: String,
+      // build-in validator
       required: [true, "A name must be defined"],
       unique: true,
+      // sử dụng thư viện validator
+      validate: {
+        validator: function (val) {
+          return validator.isAlpha(val, "en-US", { ignore: " " });
+        },
+        message: "A tour name must have only character and space",
+      },
     },
     slug: {
       type: String,
     },
     duration: {
       type: Number,
+      // build-in validator
       require: [true, " A tour must have a duration"],
     },
     maxGroupSize: {
       type: Number,
+      // build-in validator
       require: [true, "A tour must have max group size"],
     },
     difficulty: {
       type: String,
+      // build-in validator
       require: [true, " A tour must have a difficulty"],
     },
     ratingsAverage: {
@@ -39,12 +51,24 @@ const tourSchema = new mongoose.Schema(
     },
     price: {
       type: Number,
+      // build-in validator
       require: [true, "A price must be defined"],
     },
-    priceDiscount: Number,
+    priceDiscount: {
+      type: Number,
+      validate: {
+        validator: function (val) {
+          // this trong validation function trỏ về document hiện tại khi được tạo mới(create) (với các query là update -> this refer to undefined -> không thể validator bằng this được)
+          // console.log(this.price); // khi sử dụng validator cho update thì this trở thành undefined
+          return val < this.price;
+        },
+        message: "Price discount({VALUE}) must below to regular price ",
+      },
+    },
     summary: {
       type: String,
       trim: true,
+      // build-in validator
       require: [true, " A tour must have summary"],
     },
     description: {
@@ -53,6 +77,7 @@ const tourSchema = new mongoose.Schema(
     },
     imageCover: {
       type: String,
+      // build-in validator
       require: [true, " A tour must have image cover"],
     },
     images: [String],
@@ -106,6 +131,7 @@ tourSchema.pre("save", function (next) {
 // });
 
 // QUERY MIDDLEWARE
+
 // query middleware sẽ thực thi 1 callback function trước hoặc sau khi 1 query được thực thi
 tourSchema.pre(/^find/, function (next) {
   // thực thi callback function trước khi 1 query thực thi
@@ -117,6 +143,22 @@ tourSchema.pre(/^find/, function (next) {
 });
 tourSchema.post(/^find/, function (doc, next) {
   console.log(doc);
+  next();
+});
+
+// AGGREGATION MIDDLEWARE
+
+// aggregation middleware sẽ thực thi 1 callback function trước hoặc sau khi 1 aggregation được thực thi
+tourSchema.pre("aggregate", function (next) {
+  // thực thi callback function trước khi 1 aggregation thực thi
+  // this trong aggregation middleware sẽ trỏ tới aggregation object
+  // this.pipeline()  trả vê 1 mảng chưa các stage của aggregation object
+  this.pipeline().unshift({
+    // lọc ra các tour có secret tour = false trước khi thực thi aggregate
+    $match: {
+      secretTour: { $ne: true },
+    },
+  });
   next();
 });
 
