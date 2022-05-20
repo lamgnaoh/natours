@@ -7,15 +7,12 @@ const userSchema = new mongoose.Schema({
   },
   email: {
     type: String,
+    required: [true, " Please provide an email "],
+    unique: true,
+    lowercase: true,
     validate: {
-      type: String,
-      required: [true, " Please provide an email "],
-      unique: true,
-      lowercase: true,
-      validate: {
-        validator: function (val) {
-          return validator.isEmail();
-        },
+      validator: function (val) {
+        return validator.isEmail(val);
       },
       message: " Please provide a valid email ",
     },
@@ -26,11 +23,11 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     minLength: 8,
-    require: [true, "Please provide an password"],
+    required: [true, "Please provide an password"],
   },
   passwordConfirm: {
     type: String,
-    require: [true, "Please confirm a password"],
+    required: [true, "Please confirm a password"],
     validate: {
       validator: function (val) {
         return this.password === val;

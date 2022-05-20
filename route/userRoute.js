@@ -4,7 +4,11 @@ const router = express.Router();
 
 // userController ở đây bằng với đối tượng exports của file userController.js
 const userController = require("../controller/userController");
+const authController = require("../controller/authController");
 // do đã gán userRouter vào trong app.user('/api/v1/users') nên các route của userRouter chỉ còn cần "/" là được
+
+router.post("/signup", authController.signup);
+
 router
   .route("/")
   .get(userController.getAllUsers)
