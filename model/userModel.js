@@ -39,6 +39,7 @@ const userSchema = new mongoose.Schema({
 });
 // encrypt password: xảy ra trước khi lưu password vào trong Database
 userSchema.pre("save", async function (next) {
+  // nếu như có trường nào khác modified dữ liệu thì không cần phải hash lại password đã lưu trong db
   if (!this.isModified("password")) return next();
 
   this.password = await bcrypt.hash(this.password, 12);
