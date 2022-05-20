@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
+const bcrypt = require("bcryptjs");
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -35,6 +36,15 @@ const userSchema = new mongoose.Schema({
       messagge: "Password must match",
     },
   },
+});
+// encrypt password: xảy ra trước khi lưu password vào trong Database
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+
+  this.password = await bcrypt.hash(this.password, 12);
+  // không lưu password confirm vào trong DB . chỉ để validate password nhập vào
+  this.passwordConfirm = undefined;
+  next();
 });
 const User = mongoose.model("User", userSchema);
 module.exports = User;
