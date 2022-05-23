@@ -8,6 +8,7 @@ const authController = require("../controller/authController");
 // do đã gán userRouter vào trong app.user('/api/v1/users') nên các route của userRouter chỉ còn cần "/" là được
 
 router.post("/signup", authController.signup);
+router.post("/login", authController.login);
 
 router
   .route("/")

@@ -25,6 +25,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     minLength: 8,
     required: [true, "Please provide an password"],
+    select: false, // khi query từ database thì sẽ không hiện trường password
   },
   passwordConfirm: {
     type: String,
@@ -47,5 +48,12 @@ userSchema.pre("save", async function (next) {
   this.passwordConfirm = undefined;
   next();
 });
+
+userSchema.method(
+  "comparePassword",
+  async function (candidatePassword, userPassword) {
+    return await bcrypt.compare(candidatePassword, userPassword);
+  }
+);
 const User = mongoose.model("User", userSchema);
 module.exports = User;
