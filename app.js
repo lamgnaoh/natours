@@ -1,5 +1,7 @@
 const express = require("express");
 const morgan = require("morgan");
+const AppError = require("./utils/appError");
+const globalErrorHandler = require("./controller/errorController");
 const app = express();
 
 //1, Middleware
@@ -39,10 +41,13 @@ app.use("/api/v1/tours", tourRouter);
 app.use("/api/v1/users", userRouter);
 
 app.all("*", (req, res, next) => {
-  res.status(404).json({
-    status: "fail",
-    message: `Can't find ${req.originalUrl} on this server`,
-  });
-});
+  // const err = new Error(`Can't find ${req.originalUrl} on this server`);
+  // err.statusCode = 404;
+  // err.status = "fail";
 
+  // khi next nhận 1 argument , express sẽ tự động nhận dạng đó là 1 error , và sau đó sẽ dừng tất cả các middleware khác trong stack , sau đó gửi error đó tới global error handling middleware
+  next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));
+});
+// Global error handling middleware
+app.use(globalErrorHandler);
 module.exports = app;
