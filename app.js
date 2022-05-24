@@ -7,6 +7,8 @@ const app = express();
 //1, Middleware
 app.use(morgan("dev"));
 app.use(express.static(`${__dirname}/public`));
+// express.json() là 1 built-in middleware , phân tích JSON ở trong request gửi đến và gán dữ liệu đã được phân tích vào trong req.body
+// nếu không có express.json() , req.body = null
 app.use(express.json());
 
 /**
