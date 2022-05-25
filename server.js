@@ -27,6 +27,14 @@ mongoose
 //4, start server
 const port = process.env.PORT || 3000;
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`Listening on port ${port} ... `);
+});
+// mỗi khi có một rejection không được xử lý (của 1 promise) (không được catch) -> đối tượng process sẽ phát ra 1 sự kiện là unhandleRejection
+// xử lý sự kiện  unhandleRejection ở đây
+process.on("uncaughtException", (err) => {
+  console.log(err.name, err.message);
+  server.close(() => {
+    process.exit(1);
+  });
 });
