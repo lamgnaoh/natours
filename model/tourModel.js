@@ -141,10 +141,12 @@ tourSchema.pre(/^find/, function (next) {
   this.find({ secretTour: { $ne: true } });
   next();
 });
-tourSchema.post(/^find/, function (doc, next) {
-  console.log(doc);
-  next();
-});
+// thực thi callback function sau khi 1 query thực thi
+
+// tourSchema.post(/^find/, function (doc, next) {
+//   console.log(doc);
+//   next();
+// });
 
 // AGGREGATION MIDDLEWARE
 

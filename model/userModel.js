@@ -37,6 +37,7 @@ const userSchema = new mongoose.Schema({
       messagge: "Password must match",
     },
   },
+  passwordChangeAt: Date,
 });
 // encrypt password: xảy ra trước khi lưu password vào trong Database
 userSchema.pre("save", async function (next) {
@@ -49,11 +50,25 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
+// instance method
 userSchema.method(
   "comparePassword",
   async function (candidatePassword, userPassword) {
     return await bcrypt.compare(candidatePassword, userPassword);
   }
 );
+// kiểm tra nếu thời gian thay đổi password xảy ra sau khi token được issue
+userSchema.methods.changePasswordAfter = function (JWTTimeIssued) {
+  // nếu JWTTimeIssue nhỏ hơn timeChangePassword -> trả về true
+  if (this.passwordChangeAt) {
+    const timeChangePassword = parseInt(
+      this.passwordChangeAt.getTime() / 1000,
+      10
+    );
+    // console.log(timeChangePassword, JWTTimeIssued);
+    return timeChangePassword > JWTTimeIssued;
+  }
+  return false;
+};
 const User = mongoose.model("User", userSchema);
 module.exports = User;

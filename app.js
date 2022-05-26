@@ -42,6 +42,7 @@ const tourRouter = require("./route/tourRoute");
 app.use("/api/v1/tours", tourRouter);
 app.use("/api/v1/users", userRouter);
 
+// với các request không có dạng như các request phía trên thì sẽ được xử lý ở đây
 app.all("*", (req, res, next) => {
   // const err = new Error(`Can't find ${req.originalUrl} on this server`);
   // err.statusCode = 404;
@@ -52,4 +53,5 @@ app.all("*", (req, res, next) => {
 });
 // Global error handling middleware
 app.use(globalErrorHandler);
+
 module.exports = app;
