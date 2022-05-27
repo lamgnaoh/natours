@@ -21,7 +21,8 @@
       "version": ">=8.0.0",
       "ignores": []
   }] ,
-  "prefer-arrow-callback": [ 1, { "allowUnboundThis": false } ]
+  "prefer-arrow-callback": [ 1, { "allowUnboundThis": false } ],
+  "arrow-body-style": ["error", "always"]
   }
 }
 

@@ -16,6 +16,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     name: req.body.name,
     email: req.body.email,
     password: req.body.password,
+    role: req.body.role,
     passwordConfirm: req.body.passwordConfirm,
     passwordChangeAt: req.body.passwordChangeAt,
   });
@@ -70,7 +71,7 @@ exports.login = async (req, res, next) => {
   }
 };
 
-// protect route
+// protect route (Authentication)
 exports.protect = catchAsync(async (req, res, next) => {
   // 1 kiểm tra nếu trong header có chứa token hay không
   let token;
@@ -94,7 +95,6 @@ exports.protect = catchAsync(async (req, res, next) => {
    * VD: const verify =  promisify(jwt.verify)  <=>  verify now is the promise version of jwt.verify
    */
   const payload = await promisify(jwt.verify)(token, process.env.JWT_SECRETKEY);
-  // console.log(payload);
   // 3 Kiểm tra nếu user còn tồn tại
   const currentUser = await User.findById(payload.id);
   if (!currentUser) {
@@ -116,3 +116,20 @@ exports.protect = catchAsync(async (req, res, next) => {
   req.user = currentUser;
   next();
 });
+// Authorization: verify user nào có quyền được tương tác với 1 resouce nào đó (kiểm tra 1 người dùng nào đó có quyền truy cập vào 1 tài nguyên nào đó hay không , kể cả khi đã login)
+
+// VD: chỉ có admin mới có quyền tương tác(delete) user
+exports.restrictTo = (...roles) => {
+  // do middleware function chỉ nhận các tham số như err, req , res, next -> khi này cần 1 function bao  trả về middleware function
+  return (req, res, next) => {
+    //1: kiem tra role cua user la gi
+    const { role } = req.user;
+    // console.log(role);
+    if (!roles.includes(role)) {
+      return next(
+        new AppError("You do not have permission to access this route ", 403) //http code 403 : forbidden -> không có quyền truy cập vào route này
+      );
+    }
+    next();
+  };
+};
