@@ -3,7 +3,7 @@ const { promisify } = require("util");
 const User = require("../model/userModel");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
-
+const sendMail = require("../utils/email");
 function generateToken(payload) {
   // tạo token -> jwt.sign(payload , secretOrPrivatekey , [option , callback])
   return jwt.sign(payload, process.env.JWT_SECRETKEY, {
@@ -133,3 +133,45 @@ exports.restrictTo = (...roles) => {
     next();
   };
 };
+
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  // 1 lấy ra user dựa trên email truyền vào trong req.body
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    return next(new AppError("There is no user with email address", 404));
+  }
+  // 2. Sinh ra  random reset token để gửi cho email
+  const token = user.createResetPasswordToken();
+  await user.save({ validateBeforeSave: false });
+  // 3. gửi token qua email
+  const resetPasswordURL = `${req.protocol}://${req.headers.host}/api/v1/users/resetPassword/${token}`;
+  // console.log(resetPasswordURL);
+  const message = `Forgot your password ? Enter this URL ${resetPasswordURL} to create new password `;
+  const options = {
+    from: "Admin <admin@jonas.io>",
+    to: user.email,
+    subject: "Reset your password(token valid in 10 min)",
+    text: message,
+    // html
+  };
+  try {
+    await sendMail(options);
+    res.status(200).json({
+      status: "success",
+      message: "Token sent to email",
+    });
+  } catch (err) {
+    // reset lại token và timeExpire
+    user.passwordResetToken = undefined;
+    user.passwordResetTokenExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+    return next(
+      new AppError(
+        "There was an error while sending email. Please try again",
+        500
+      )
+    );
+  }
+});
+
+exports.resetPassword = (req, res, next) => {};
