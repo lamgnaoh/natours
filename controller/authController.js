@@ -1,9 +1,11 @@
 const jwt = require("jsonwebtoken");
 const { promisify } = require("util");
+const crypto = require("crypto");
 const User = require("../model/userModel");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const sendMail = require("../utils/email");
+
 function generateToken(payload) {
   // tạo token -> jwt.sign(payload , secretOrPrivatekey , [option , callback])
   return jwt.sign(payload, process.env.JWT_SECRETKEY, {
@@ -174,4 +176,32 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   }
 });
 
-exports.resetPassword = (req, res, next) => {};
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  // 1: Lấy ra user dựa vào reset token
+  const resetToken = crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
+  // tim kiem user dua tren token va thoi gian token exprire phai lon hon hien tai
+  const user = await User.findOne({
+    passwordResetToken: resetToken,
+    passwordResetTokenExpires: { $gt: Date.now() },
+  });
+  // 2: nếu token chưa expired , và có user tương ứng với token , set password mới
+  if (!user) {
+    return next(new AppError("Token invalid or expired", 400));
+  }
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  user.passwordResetToken = undefined;
+  user.passwordResetTokenExpires = undefined;
+  await user.save();
+  // 3: update trường passwordChangeAt
+
+  // 4: log user in and send JWT
+  const token = generateToken({ id: user._id });
+  res.status(200).json({
+    status: "ok",
+    token,
+  });
+});
