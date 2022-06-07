@@ -1,9 +1,9 @@
 // file server.js chỉ để chứa các đoạn code riêng biệt không sử dụng express, chỉ chứa các đoạn code cấu hình cho server vd listen port , database configuration , biến môi trường evn , handling error ,...
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+
 // Uncaught Exceptions
 // uncaught exception là các lỗi  xảy ra trong các đoạn code đồng bộ nhưng chưa được xử lý
-// sẽ được xử lý ở đây
 
 process.on("uncaughtException", (err) => {
   console.log("Uncaught Exception !!! Shutting down...");

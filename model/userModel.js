@@ -37,6 +37,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, "Please confirm a password"],
     validate: {
+      // ham validator nay chi thực hiện được với create và save (.create() , .save() ), không thực hiện validator trên findByIdAndUpdate , ...
       validator: function (val) {
         return this.password === val;
       },

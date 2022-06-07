@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const { promisify } = require("util");
 const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
 const User = require("../model/userModel");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
@@ -199,6 +200,27 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   // 3: update trường passwordChangeAt
 
   // 4: log user in and send JWT
+  const token = generateToken({ id: user._id });
+  res.status(200).json({
+    status: "ok",
+    token,
+  });
+});
+
+// user update password when logged in
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  //1 Get user from collection
+  const user = await User.findById(req.user.id).select("+password");
+
+  // 2 check if POSTed current password is correct
+  if (!(await user.comparePassword(req.body.passwordCurrent, user.password))) {
+    return next(new AppError("Your current password is wrong", 401));
+  }
+  // 3 if so , update password
+  user.password = req.user.newPassword;
+  user.passwordConfirm = req.user.passwordConfirm;
+  await user.save();
+  //4 log user in again , send JWT
   const token = generateToken({ id: user._id });
   res.status(200).json({
     status: "ok",
