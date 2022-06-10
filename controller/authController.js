@@ -49,9 +49,10 @@ exports.login = async (req, res, next) => {
     // 2 : kiểm tra nếu user tồn tại trong db và password đúng
     const user = await User.findOne({ email }).select("+password");
 
-    const result = await user.comparePassword(password, user.password);
-    // console.log(result);
+    // const result = await user.comparePassword(password, user.password);
+    // // console.log(result);
     if (
+      !user ||
       user.email !== email ||
       !(await user.comparePassword(password, user.password))
     ) {

@@ -46,6 +46,7 @@ exports.createNewUser = catchAsync(async (req, res) => {
   });
 });
 
+// user udpate account
 exports.updateMe = catchAsync(async (req, res, next) => {
   //1 . Kiểm tra nếu có password trong req.body -> trả về lỗi đường dẫn này không update password
   if (req.body.password || req.body.passwordConfirm) {
@@ -68,6 +69,15 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     data: {
       user: updatedUser,
     },
+  });
+});
+
+// user delete account
+exports.deleteMe = catchAsync(async (req, res, next) => {
+  await User.findByIdAndDelete(req.user._id);
+  res.status(204).json({
+    status: "success",
+    data: null,
   });
 });
 exports.getUser = (req, res) => {
