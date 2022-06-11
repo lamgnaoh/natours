@@ -13,7 +13,22 @@ function generateToken(payload) {
     expiresIn: process.env.JWT_EXPIRED, // expired_in: sau một khoảng thời gian , chuỗi token không còn valid nữa
   });
 }
-
+function sendCookie(name, value, res) {
+  // cookie:
+  // cookie là 1 đoạn data mà server gửi cho client. Client nhận được cookie sẽ lưu trữ nó trên máy tính , và sẽ gửi lại nó với mỗi request trong tương lai đến server
+  const cookieOptions = {
+    // thời gian cookie hết hạn:
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRED * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true,
+  };
+  if (process.env.NODE_ENV === "production") {
+    cookieOptions.secure = true;
+  }
+  // gửi cookie cho client
+  res.cookie(name, value, cookieOptions);
+}
 exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
@@ -25,6 +40,8 @@ exports.signup = catchAsync(async (req, res, next) => {
   });
   // tạo token -> jwt.sign(payload , secretOrPrivatekey , [option , callback])
   const token = generateToken({ id: newUser._id });
+
+  sendCookie("jwt", token, res);
   res.status(200).json({
     status: "success",
     token: token,
@@ -63,6 +80,9 @@ exports.login = async (req, res, next) => {
     }
     // 3: nếu mọi thứ ok , sinh token và  gửi token cho client
     const token = generateToken({ id: user._id });
+
+    sendCookie("jwt", token, res);
+
     res.status(200).json({
       status: "ok",
       token,
