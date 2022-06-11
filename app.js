@@ -1,11 +1,23 @@
 const express = require("express");
 const morgan = require("morgan");
+const rateLimit = require("express-rate-limit");
 const AppError = require("./utils/appError");
 const globalErrorHandler = require("./controller/errorController");
 const app = express();
 
-//1, Middleware
+//1, global Middleware
 app.use(morgan("dev"));
+
+// implement rate limit
+const limiter = rateLimit({
+  max: 100, // 100 request
+  windowMs: 60 * 60 * 1000, // 1h
+  message: "Too many request per IP in 1 hour. Please try again after an hour",
+  // standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers , default la false
+  // legacyHeaders: false, // Disable the `X-RateLimit-*` headers , default la true
+});
+app.use("/api", limiter); // với các API thì giới hạn số lượng request từ 1 IP
+
 app.use(express.static(`${__dirname}/public`));
 // express.json() là 1 built-in middleware , phân tích JSON ở trong request gửi đến và gán dữ liệu đã được phân tích vào trong req.body
 // nếu không có express.json() , req.body = null
