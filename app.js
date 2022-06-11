@@ -2,6 +2,8 @@ const express = require("express");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
 const helmet = require("helmet");
+const mongoSanitize = require("express-mongo-sanitize");
+const xssCleaner = require("xss-clean");
 const AppError = require("./utils/appError");
 const globalErrorHandler = require("./controller/errorController");
 const app = express();
@@ -31,6 +33,11 @@ app.use(express.static(`${__dirname}/public`));
 // nếu không có express.json() , req.body = null
 app.use(express.json({ limit: "10kb" }));
 
+// data sanitize from noSQL query Injection: thư viện express-mongo-sanitize giúp loại bỏ các dấu $ hoặc . trong request body , request query string , và request params
+app.use(mongoSanitize());
+
+// data sanitize from XSS:thư viện xss-clean giúp clean các user input từ các mã độc HTML chứa 1 số đoạn code mã độc JS
+app.use(xssCleaner());
 /**
  * app.use () không định nghĩa route nào áp dụng middleware  -> tất cả các request đến server đều sử dụng hàm middleware đó (do trong app.use() có tham số path mặc định là "/" -> sẽ match tất cả các request đến server. nếu path = "/apple" -> match các request như "/apple" , "/apple/image" ,"/apple/image/5" ...)
  */
