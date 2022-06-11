@@ -1,11 +1,16 @@
 const express = require("express");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
+const helmet = require("helmet");
 const AppError = require("./utils/appError");
 const globalErrorHandler = require("./controller/errorController");
 const app = express();
 
 //1, global Middleware
+// set security HTTP headers
+app.use(helmet());
+
+// development logging
 app.use(morgan("dev"));
 
 // implement rate limit
@@ -13,15 +18,18 @@ const limiter = rateLimit({
   max: 100, // 100 request
   windowMs: 60 * 60 * 1000, // 1h
   message: "Too many request per IP in 1 hour. Please try again after an hour",
-  // standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers , default la false
-  // legacyHeaders: false, // Disable the `X-RateLimit-*` headers , default la true
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers , default la false
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers , default la true
 });
 app.use("/api", limiter); // với các API thì giới hạn số lượng request từ 1 IP
 
+// serve static file
 app.use(express.static(`${__dirname}/public`));
+
+// Body parser
 // express.json() là 1 built-in middleware , phân tích JSON ở trong request gửi đến và gán dữ liệu đã được phân tích vào trong req.body
 // nếu không có express.json() , req.body = null
-app.use(express.json());
+app.use(express.json({ limit: "10kb" }));
 
 /**
  * app.use () không định nghĩa route nào áp dụng middleware  -> tất cả các request đến server đều sử dụng hàm middleware đó (do trong app.use() có tham số path mặc định là "/" -> sẽ match tất cả các request đến server. nếu path = "/apple" -> match các request như "/apple" , "/apple/image" ,"/apple/image/5" ...)
