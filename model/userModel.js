@@ -68,9 +68,11 @@ userSchema.pre("save", function (next) {
   next();
 });
 // instance method
+// so sánh password truyền vào trong req.body với password query được từ db
 userSchema.method(
   "comparePassword",
   async function (candidatePassword, userPassword) {
+    // ham compare trả về 1 promise nếu không truyền vào callback function
     return await bcrypt.compare(candidatePassword, userPassword);
   }
 );

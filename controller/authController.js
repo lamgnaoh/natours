@@ -30,6 +30,7 @@ function sendCookie(name, value, res) {
   res.cookie(name, value, cookieOptions);
 }
 exports.signup = catchAsync(async (req, res, next) => {
+  // tạo 1 user mới với các trường thông tin từ req.body
   const newUser = await User.create({
     name: req.body.name,
     email: req.body.email,
@@ -129,7 +130,8 @@ exports.protect = catchAsync(async (req, res, next) => {
       )
     );
   }
-  // 4 Kiểm tra nếu user thay đổi password sau khi token được sinh ra -> cần login lại
+  // 4 Kiểm tra nếu user thay đổi password sau khi token được sinh ra
+  // trường iat có sẵn trong jwt token chỉ thời gian token được sinh ra
   if (currentUser.changePasswordAfter(payload.iat)) {
     return next(
       new AppError("User recently change password ! Please login again", 401)
