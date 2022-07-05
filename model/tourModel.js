@@ -118,7 +118,14 @@ const tourSchema = new mongoose.Schema(
         day: Number,
       },
     ],
-    guides: [Array],
+    // guides: [Array],
+    // referencing to other model
+    guides: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   // cần phải có các option này thì mới có thể gửi được các trường virtual đến cho client được
   {
