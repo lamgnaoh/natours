@@ -1,6 +1,8 @@
+/* eslint-disable prefer-arrow-callback */
 const mongoose = require("mongoose");
 const slugify = require("slugify");
 const validator = require("validator");
+const User = require("./userModel");
 // tao 1 schema
 const tourSchema = new mongoose.Schema(
   {
@@ -116,6 +118,7 @@ const tourSchema = new mongoose.Schema(
         day: Number,
       },
     ],
+    guides: [Array],
   },
   // cần phải có các option này thì mới có thể gửi được các trường virtual đến cho client được
   {
@@ -142,9 +145,13 @@ tourSchema.pre("save", function (next) {
   this.slug = slugify(this.name);
   next();
 });
-
-// tourSchema.pre("save", function (next) {
-//   console.log("Will save document ...");
+// lưu 1 tour vào trong db có trường guides chứa user có role là guide -> trong trường hợp sử dụng embedding document
+// tourSchema.pre("save", async function (next) {
+//   const guidesPromise = this.guides.map(async (id) => {
+//     await User.findById(id);
+//   });
+//   const guides = await Promise.all(guidesPromise);
+//   this.guides = guides;
 //   next();
 // });
 
@@ -158,6 +165,7 @@ tourSchema.pre("save", function (next) {
 // QUERY MIDDLEWARE
 
 // query middleware sẽ thực thi 1 callback function trước hoặc sau khi 1 query được thực thi
+// eslint-disable-next-line prefer-arrow-callback
 tourSchema.pre(/^find/, function (next) {
   // thực thi callback function trước khi 1 query thực thi
   // this trong query middleware sẽ trỏ tới query object (Ở đây là Tour.find() , Tour.findOne() , Tour.findOneAndUpdate() , ...)
