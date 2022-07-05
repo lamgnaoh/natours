@@ -181,6 +181,13 @@ tourSchema.pre(/^find/, function (next) {
   this.find({ secretTour: { $ne: true } });
   next();
 });
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: "guides",
+    select: "-__v -passwordChangeAt",
+  });
+  next();
+});
 // thực thi callback function sau khi 1 query thực thi
 
 // tourSchema.post(/^find/, function (doc, next) {
